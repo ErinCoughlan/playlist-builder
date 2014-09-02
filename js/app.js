@@ -6,6 +6,7 @@ angular.module('myApp', [])
   var filteredSongs = [];
   var pageLimit = 20;
 
+  $scope.date = {};
   $scope.songs = [];
 
   Parse.initialize(APP_ID, PARSE_KEY);
@@ -25,6 +26,14 @@ angular.module('myApp', [])
       }
     });
   });
+
+  /**
+   * Updates the time every second
+   */
+  var updateTime = function() {
+    $scope.date.raw = new Date();
+    $timeout(updateTime, 1000);
+  };
 
   /**
    * Get all the songs currently in the playlist
@@ -73,17 +82,17 @@ angular.module('myApp', [])
       var artist = $scope.songArtist;
       var song = {title: title, artist: artist};
 
-      // Determine if the song already exists in the database
-      var query = new Parse.Query(Song)
+      var query = new Parse.Query(Song);
+      query
           .equalTo('title', title)
           .equalTo('artist', artist)
           .count({
         success: function(number) {
           if (number == 0) {
-            // Save the song to the database   
+            // Save the song to the database  
             var songObject = new Song();
             songObject.save(song).then(function(object) {
-
+              console.log(object);
               // Reset Inputs
               $scope.songTitle = '';
               $scope.songArtist = '';
@@ -94,7 +103,7 @@ angular.module('myApp', [])
               filterAndRefreshSongs_();
             });
           } else {
-            // Tell the user the song already exists
+            // Tell the user that the song already was added
             $scope.exists = true;
           }
         }
@@ -103,5 +112,7 @@ angular.module('myApp', [])
   };
 
   // Kick off the update function
+  updateTime();
   getPlaylist();
 });
+
