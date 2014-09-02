@@ -15,6 +15,7 @@
     "persistent": false,
     "scripts": [
       "js/vendor/angular.min.js",
+      "js/vendor/parse-1.2.19.min.js",
       "js/background.js"
     ]
   },

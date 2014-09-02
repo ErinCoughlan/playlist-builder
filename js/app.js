@@ -2,12 +2,18 @@ angular.module('myApp', [])
 .controller('MainCtrl', function($scope, $timeout) {
   var KEY = '1xsDTI-iJL2BQE0vcYedzCFQTK1dd0gltH-c8woFRf5w';
   var URL = 'https://spreadsheets.google.com/feeds/list/' + KEY +
-  		'/od6/public/values?alt=json';
+      '/od6/public/values?alt=json';
+  var APP_ID = 'nq3nLXdZAza67nUH3HNyYKFiQ8pesJ9DlpA8BxFm';
+  var PARSE_KEY = 'fvT1wR4eMTngApnBYwjrrBLsJQhNZi1PRi8SIBBV';
 
   var filteredSongs = [];
+  var pageLimit = 20;
 
   $scope.date = {};
   $scope.songs = [];
+
+  Parse.initialize(APP_ID, PARSE_KEY);
+  var Song = Parse.Object.extend('Song');
 
   // Get any background information about music playing
   chrome.storage.sync.get('musicInfo', function(value) {
@@ -36,49 +42,62 @@ angular.module('myApp', [])
    * Get all the songs currently in the playlist
    */
   var getPlaylist = function() {
-		var req = new XMLHttpRequest();
-		req.open("GET", URL, true);
-		req.responseType = 'json';
-    req.onload = addSongs_.bind(this);
-    req.send(null);
+    var query = new Parse.Query(Song);
+    query.find({
+      success: function(results) {
+        filteredSongs = [];
+        for (var i = 0, result; result = results[i]; i++) {
+          var title = result.get('title');
+          var artist = result.get('artist');
+          var date = result.get('createdAt');
+          var song = {title: title, artist: artist, dateAdded: date};
+          filteredSongs.push(song);
+        }
+        filterAndRefreshSongs_();
+      },
+      error: function(error) {
+        // error is an instance of Parse.Error.
+      }
+    });
   };
 
   /**
-	 * Handle the 'onload' event of our song XHR request, generated in
-	 * 'getPlaylist'.
-	 *
-	 * @param {ProgressEvent} e The XHR ProgressEvent.
-	 * @private
-	 */
-	var addSongs_ = function (e) {
-		filteredSongs = [];
-	  var entries = e.target.response.feed.entry || [];
-		for (var i = 0, entry; entry = entries[i]; i++) {
-			var title = entry['gsx$title']['$t'];
-			var artist = entry['gsx$artist']['$t'];
-			var date = entry['gsx$dateadded']['$t'];
-			var song = {title: title, artist: artist, dateAdded: date};
-			filteredSongs.push(song);
-		}
-		filterAndRefreshSongs_();
-	};
+   * Orders the songs from most recent to least recent. Also, sets a 
+   * limit on the number of songs that will be displayed at once.
+   * 
+   * @private
+   */
+  var filterAndRefreshSongs_ = function() {
+    $scope.songs = filteredSongs.reverse().slice(0, pageLimit);
+  };
 
-	/**
-	 * Orders the songs from most recent to least recent. Also, sets a 
-	 * limit on the number of songs that will be displayed at once.
-	 * 
-	 * @private
-	 */
-	var filterAndRefreshSongs_ = function() {
-		$scope.songs = filteredSongs.reverse();
-	};
+  /**
+   * Adds the currently playing song to the list.
+   */
+  $scope.addSong = function(e) {
+    console.log(e);
+    $scope.success = false;
+    if ($scope.musicPlaying) {
+      // Add the current song
+    } else {
+      var title = $scope.songTitle;
+      var artist = $scope.songArtist;
+      var song = {title: title, artist: artist};
 
-	/**
-	 * Adds the currently playing song to the list.
-	 */
-	$scope.addNewSong = function() {
-		// something eventually
-	};
+      // Send the data to the server    
+      var songObject = new Song();
+      songObject.save(song).then(function(object) {
+        console.log(object);
+        // Reset Inputs
+        $scope.songTitle = '';
+        $scope.songArtist = '';
+
+        // Tell the user success
+        $scope.success = true;
+        $scope.songs.unshift(song);
+      });
+    }
+  };
 
   // Kick off the update function
   updateTime();

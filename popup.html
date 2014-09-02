@@ -6,6 +6,7 @@
     <link rel="stylesheet" href="css/main.css">
     <script src="./js/vendor/angular.min.js"></script>
     <script src="./js/vendor/angular-route.min.js"></script>
+    <script src="./js/vendor/parse-1.2.19.min.js"></script>
     <script src="./js/app.js"></script>
   </head>
   <body>
@@ -15,7 +16,16 @@
           <h3>Time to build a playlist! {{ date.raw | date:'short' }}</h3>
         </div>
         <div>(music playing: {{ musicPlaying }})</div>
-        <button id="addNewSong" type="button" ng-click="addNewSong()">Add Current Song</button>
+        <button id="addCurrentSong" ng-if="musicPlaying" type="button" ng-click="addSong()">
+          Add Currently Playing Song
+        </button>
+        <input type="text" ng-model="songTitle" placeholder="song title" name="title"></input>
+        <input type="text" ng-model="songArtist" placeholder="artist" name="artist"></input>
+        <button id="addManuelSong" type="button" ng-click="addSong()">
+          Add Song
+        </button>
+        <div class="success" ng-if="success">Successfully added song...</div>
+        <h3>Recently Added:</h3>
         <ul class="playlist">
             <li ng-repeat="song in songs">
               {{ song.title }} by {{ song.artist }}
