@@ -89,9 +89,10 @@ angular.module('myApp', [])
         $scope.songTitle = '';
         $scope.songArtist = '';
 
-        // Tell the user success
+        // Add the song to the recently added songs
         $scope.success = true;
-        $scope.songs.unshift(song);
+        filteredSongs.push(song);
+        filterAndRefreshSongs_();
       });
     }
   };
