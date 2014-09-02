@@ -6,7 +6,6 @@ angular.module('myApp', [])
   var filteredSongs = [];
   var pageLimit = 20;
 
-  $scope.date = {};
   $scope.songs = [];
 
   Parse.initialize(APP_ID, PARSE_KEY);
@@ -28,19 +27,11 @@ angular.module('myApp', [])
   });
 
   /**
-   * Updates the time every second
-   */
-  var updateTime = function() {
-    $scope.date.raw = new Date();
-    $timeout(updateTime, 1000);
-  };
-
-  /**
    * Get all the songs currently in the playlist
    */
   var getPlaylist = function() {
     var query = new Parse.Query(Song);
-    query.find({
+    query.descending('createdAt').find({
       success: function(results) {
         filteredSongs = [];
         for (var i = 0, result; result = results[i]; i++) {
@@ -59,13 +50,13 @@ angular.module('myApp', [])
   };
 
   /**
-   * Orders the songs from most recent to least recent. Also, sets a 
-   * limit on the number of songs that will be displayed at once.
+   * Sets a limit on the number of songs that will be displayed at once
+   * and adds everything to scope
    * 
    * @private
    */
   var filterAndRefreshSongs_ = function() {
-    $scope.songs = filteredSongs.reverse().slice(0, pageLimit);
+    $scope.songs = filteredSongs.slice(0, pageLimit);
   };
 
   /**
@@ -74,6 +65,7 @@ angular.module('myApp', [])
   $scope.addSong = function(e) {
     console.log(e);
     $scope.success = false;
+    $scope.exists = false;
     if ($scope.musicPlaying) {
       // Add the current song
     } else {
@@ -81,24 +73,35 @@ angular.module('myApp', [])
       var artist = $scope.songArtist;
       var song = {title: title, artist: artist};
 
-      // Send the data to the server    
-      var songObject = new Song();
-      songObject.save(song).then(function(object) {
-        console.log(object);
-        // Reset Inputs
-        $scope.songTitle = '';
-        $scope.songArtist = '';
+      // Determine if the song already exists in the database
+      var query = new Parse.Query(Song)
+          .equalTo('title', title)
+          .equalTo('artist', artist)
+          .count({
+        success: function(number) {
+          if (number == 0) {
+            // Save the song to the database   
+            var songObject = new Song();
+            songObject.save(song).then(function(object) {
 
-        // Add the song to the recently added songs
-        $scope.success = true;
-        filteredSongs.push(song);
-        filterAndRefreshSongs_();
+              // Reset Inputs
+              $scope.songTitle = '';
+              $scope.songArtist = '';
+
+              // Add the song to the recently added songs
+              $scope.success = true;
+              filteredSongs.unshift(song);
+              filterAndRefreshSongs_();
+            });
+          } else {
+            // Tell the user the song already exists
+            $scope.exists = true;
+          }
+        }
       });
     }
   };
 
   // Kick off the update function
-  updateTime();
   getPlaylist();
 });
-

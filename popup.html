@@ -26,6 +26,7 @@
           Add Song
         </button>
         <div class="success" ng-if="success">Successfully added song...</div>
+        <div class="failure" ng-if="exists">Song already added...</div>
         <h3>Recently Added:</h3>
         <ul class="playlist">
             <li ng-repeat="song in songs">
