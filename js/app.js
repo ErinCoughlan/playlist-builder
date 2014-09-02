@@ -1,8 +1,5 @@
 angular.module('myApp', [])
 .controller('MainCtrl', function($scope, $timeout) {
-  var KEY = '1xsDTI-iJL2BQE0vcYedzCFQTK1dd0gltH-c8woFRf5w';
-  var URL = 'https://spreadsheets.google.com/feeds/list/' + KEY +
-      '/od6/public/values?alt=json';
   var APP_ID = 'nq3nLXdZAza67nUH3HNyYKFiQ8pesJ9DlpA8BxFm';
   var PARSE_KEY = 'fvT1wR4eMTngApnBYwjrrBLsJQhNZi1PRi8SIBBV';
 
